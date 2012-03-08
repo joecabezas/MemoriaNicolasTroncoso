@@ -1,0 +1,132 @@
+\chapter{Conclusions}
+\label{ch:conclusions}
+This work has produced a design and a
+working implementation of a Model Driven
+generator for the ACS framework.
+The development process was based on an iterative process with hands on
+experience and real examples that made shortcomings and modifications needed
+in the design evident.
+The shortcomings detected were addressed in the evolution to the actual implementation,
+achieving a maturity such that the generated IDL files were
+used for the 6th ACS Workshop Basic Track Live Example (see section~%
+\ref{sec:external-review}).
+
+The most remarkable features of the generation framework are:
+\begin{itemize}
+    \item The generated module is ready for compilation and usage as generated.
+    No further development is required for initial testing.
+    \item A pluggable module design was achieved, in the sense that adding
+    an additional implementation language does not disrupt, nor cause great
+    impact in the generation framework.
+    \item The version of OAW used during development is the same as
+    the one shipped by ACS-8.1. No porting efforts are required for integration.
+\end{itemize}
+
+The work of this undergraduate thesis complies
+with the objectives defined in
+section~\ref{sec:objectives} as follows:
+\begin{enumerate}
+\item
+  \textbf{Code generation starting from a model
+  (and/or text representation).}
+  The input for the generation process is an UML model in the
+  XMI (UML\,2.0) format.
+  \begin{enumerate}
+     \item \textbf{Create IDL files. This implies creating a full implementation of the
+     UML model as an IDL file so it may be compiled by IDL compilers.}
+     A full IDL implementation of the model is generated.
+     This includes IDL structs and enumerated types, entities which were not
+     considered in the preliminary design, but found to be essential during development.
+     \item \textbf{Create base class implementation starting from a class diagram.
+     This base classes will be functional as they will implement the
+     relevant interfaces of the ACS framework.}
+     Basic base class implementation is achieved, these base classes
+     also have empty implementation of the complete interface defined by the IDL file.
+     \item \textbf{Create CDB schemas. CDB is the Configuration Data Base, this database informs
+     the framework about the available software components.
+     The database checks the component against an XML schema that defines the software
+     component properties.}
+     CDB schemas are created where they are needed (ACS Characteristic Component).
+     As an addition it was found necessary to create a test deployment CDB.
+     This CDB is ready for use, and requires no developer intervention to be used as is.
+     Doing this allows the developer to readily test the generated component,
+     without spending time on the time consuming labor of defining a CDB.
+     \item \textbf{Define the type mapping between the UML model representation
+     and the specific language implementation.}
+     This is internal to the code generator templates.
+     Mappings to convert UML types to IDL and Java types
+     are defined by extension methods.
+  \end{enumerate}
+\item
+  \textbf{Integrate design patterns to the code during the generation process.}
+  By using the code separation pattern the generated code is isolated from
+  the developer implemented code. This allows the generator to use and insert
+  patterns and abstraction levels without major impact on the hand-written code.
+\item
+  \textbf{Generate code for one of the ACS supported languages;
+  in particular, Java.}
+  Full support for Java components and Java Characteristic components was implemented.
+\item
+  \textbf{Validate the proposed solution through external opinions,
+  current experience,
+  and prototype implementation.}
+  This objective has been achieved as described in chapter~\ref{ch:verification}.
+\end{enumerate}
+
+\section{Future Work}
+\label{sec:future-work}
+This work is an initial prototype
+that provides a good base for a full featured
+code generator for the ACS framework.
+To achieve full featured status,
+further work on this generator should implement
+the following features and enhancements:
+\begin{itemize}
+   \item Support for C++ and Python ACS component implementations,
+     and perhaps languages to be added in the future.
+     Use the experience with other generators,
+     like
+     the ACSGenerator and the bdsGenerator,
+     as a guide for this task.
+   \item It should be possible to define the resources
+   an ACS component will need during design, this way it would
+   be possible to check usage at compile time, and ensure proper
+   acquire and release cycle of such resources.
+   \item Move common operation logic from manually implemented
+   modules into the generated code.
+   \item Identify common code chunks or repetitive chunks,
+   and move them from the templates into their classes.
+   They should be integrated using
+   the \texttt{<<uses>>} code pattern.
+   \item Flexible package definition, in the sense that it should be
+   possible to define in the model
+   the way the software modules should be grouped
+   into packages, libraries and modules.
+   \item Inheritance support between generated and non-generated code.
+   This is required to provide support for more complex models.
+   \item Provide exceptions support, in the sense that the model and
+   generated file should make use of them, and the XML definition
+   should be generated so ACS may use the ACS Error Generator to create
+   the Exception definitions for all used languages.
+   \item Provide an ACS model profile so the model definition does not
+   have to rely on stereotypes.
+   Currently it uses the type defined in the profile directly,
+   that way new components and new characteristic components directly
+   extend the ACS component and ACS characteristic component.
+   \item Integrate the code generator into the ACS module workflow.
+   This should define how code is generated, whether outside the ACS modules
+   or inside the same ACS module. How are \lstinline[language=sh]!Makefile!s handled in the later case?
+   \item Provide full model checking using an XSD or the OAW check facility.
+   The model should be validated by the generator in the sense
+   that it should guarantee that it can generate a sensible
+   output from it. This is done in the ALMA Control Software,
+   which might be used as a starting experience.
+    \item Study the feasibility of integrating this work with the
+    ALMA control software hardware device code generator
+    described in section~\ref{sec:control-generator}.
+\end{itemize}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../thesis"
+%%% End:

@@ -1,0 +1,197 @@
+\chapter{Introduction}
+\label{ch:introduction}
+
+Chile has huge potential for astronomical observation,
+because it is the home of the majority of the most important observatories
+in the world,
+and the favorite place for further projects planned
+to be constructed during the next decade.
+With the clearest skies in the world,
+Chile is becoming an astronomical power.
+Some of the already installed international observatories are
+La Silla (NTT, ESO-3.6),
+Paranal (VLT),
+Cerro Pach\'on (Gemini, SOAR),
+Cerro Tololo (Blanco),
+and Las Campanas (Magellan).
+They are mainly financed by European and North American public organizations.
+
+In addition,
+the currently largest astronomical project
+is under construction on the Chajnantor plateau
+in the Atacama desert:
+The Atacama Large Millimeter/submillimeter Array (ALMA)~\cite{ALMA-WEB}.
+This will be a radioastronomy observatory,
+formed by at least 54 12-meter diameter antennas and
+12 7-meter diameter antennas,
+which will act together as one big interferometer.
+ALMA is a partnership between Europe (ESO),
+North America (NRAO), and Japan (NAOJ).
+It is expected to be fully operational by late 2012.
+
+As part of the cooperation with the Chilean government,
+ALMA is funding scientific development at Chilean Universities
+with around half a million dollars annually.
+In this context,
+the Computer Systems Research Group (CSRG)
+at Universidad T\'ecnica Federico Santa Mar\'\i a
+is collaborating since 2004 with the development of ALMA software.
+This work is currently financed by the ALMA-CONICYT fund,
+and is done in close coordination
+with the ALMA ACS and Control subsystems development.
+
+Besides the work for the ALMA project,
+CSRG is also collaborating with the Chilean astronomy community in other ways.
+Some work has been done together with astronomy departments
+at some other Universities,
+implementing parts of the ALMA software to be used in smaller optical telescopes.
+
+The following description of ALMA software follows~\cite{avarias08:_DDS_vs_NS}.
+ALMA software
+is built on top of the ALMA Common Software (ACS)~%
+ \cite{chiozzi01:_ACS,gianluca06:_ACS_overview}
+infrastructure framework.
+%This is a CORBA based framework that
+%aims to be an extensible platform
+%for astronomical and non astronomical projects.
+%Having this in mind this document presents a review
+%of the current status of code generation,
+%it benefits, and its applicability in ACS.
+The ACS framework consists of a collection of common
+patterns, components, and services. The heart of ACS is an component model
+based on Distributed Objects implemented as CORBA~\cite{CORBA-OMG02} objects.
+ACS is based on experience accumulated with similar science projects in the
+astronomical and particle accelerator contexts, reusing concepts and
+technology used previously like VLT Common
+Software~\cite{sivera01:_vlt_overview}. Although designed for ALMA, ACS can
+and is being
+used in other control systems and distributed software projects, since it
+has been implemented to be a generic control framework using generic design
+patterns and components off the shelf~%
+\cite{chiozzi08:_enabling_softw_sharin}.
+Through the use of standard constructs and components, non-ACS developers
+can easily understand the architecture of software modules. This makes
+maintenance affordable even on a very large software project like ALMA.
+
+
+As part of the ALMA-CONICYT fund collaboration,
+CSRG has already contributed to ALMA software in
+various aspects, such as a study of real time capabilities~%
+  \cite{araya08:_verifiying_ACS_RT_periodic_properties,%
+       tobar09:_real_time_time_service_ACS}
+, in the area of control software simulation framework~%
+  \cite{mora08:_hardw_devic_simul_framew_alma_contr_subsy,%
+        mora08:_towar_gener_hardw_devic_simul}
+, developed a scheduling prototype algorithm~%
+  \cite{saez09:_sched_protot_amateur_teles_contr_acs},
+  a generic automatic pointing system~%
+  \cite{staig08:_refer_implem_gener_autom_point_system},
+  and an amateur telescope control system~%
+  \cite{tobar08:_csat_gtcs, tobar08:_CSAT_final_status}
+  a hardware end to end example~\cite{valencia07:_H3E} for
+  the ACS framework,
+  and studied the feasibility of DDS as a replacement for the notification
+  channel~\cite{avarias08:_DDS_vs_NS}.
+
+As part of this collaboration,
+specifically through project ALMA-CONICYT~\#31060008,
+the author presents an undergraduate
+thesis to cover some novel aspects which require attention
+but have not yet been developed by CSRG nor the ALMA computing group.
+
+\section{Problem Approach}
+\label{sec:problem-approach}
+Modern software control systems
+involve multiple subsystems
+and devices.
+Projects start with final designs to be implemented,
+but during the development of the project
+the designs are subject to redefinitions,
+redesigns and changes.
+As~\cite{farris07:_device_driver_code_gener_framew,%
+         farris06:_generating_software_modules}
+adequately state,
+coding a large codebase requires an
+army of programmers.
+A better approach is to use model-driven programing,
+where the code is generated automatically
+by a generator, based on a model.
+This directly impacts the error per line of code
+(since it takes over many routine, error-prone tasks)
+and helps enforcing a single coding style for
+a large portion of the code base.
+Benefits of such an approach are that
+it makes it easier to accommodate model changes,
+and
+it improves productivity since developers
+can focus on business logic
+instead of details of implementation.
+Besides the above benefits,
+improvements in the generator translate directly
+into improvements in the whole generated code base.
+
+\section{Objectives}
+\label{sec:objectives}
+ACS (Alma Common Software) could do with more automatically generated code.
+It should be possible to write software components that use the framework
+in an easier way than its done today.
+Having this in mind is that the author proposes a thesis that accomplishes:
+\begin{enumerate}
+\item
+  Code generation starting from a model
+  UML~\cite{UML-WEB}
+  (and/or text representation). UML (Unified Modeling Language) is a
+  software modeling specification maintained by the Object Management Group (OMG)~%
+  \cite{OMG-WEB}
+  \begin{enumerate}
+     \item Create IDL~\cite{OMG-IDL} files. This implies creating a full implementation of the
+     UML model as an IDL file so it may be compiled by IDL compilers.
+     \item Create a base class implementation starting from a class diagram.
+     Base classes will be functional as they implement the
+     relevant interfaces of the ACS framework.
+     \item Create CDB XML schemas. CDB is the Configuration Data Base, this database informs
+     the framework about the available software components.
+     The database checks the component against an XML schema that defines the software
+     component properties.
+     \item Define the type mapping between the UML model representation
+     and the specific language implementation.
+  \end{enumerate}
+\item
+  Integrate design patterns to the code during the generation process.
+\item
+  Generate code for one of the ACS supported languages;
+  in particular, Java.
+\item
+  Finally,
+  validate the proposed solution through external opinions,
+  current experience,
+  and generating example implementations of a variety of models
+  through a prototype implementation.
+\end{enumerate}
+
+\section{Document Structure}
+\label{sec:documentStructure}
+The document is structured as follows:
+In chapter~\ref{ch:technology-overview} a review of
+available technologies is made,
+presenting different code generator
+frameworks upon which this thesis is based.
+Section~\ref{sec:code-generation:ACS} talks about
+the current status of code generation in ACS,
+section~\ref{sec:code-generation:impact}
+details benefits that this thesis proposes.
+Chapter~\ref{ch:architecture} talks about the
+architecture of the proposed solution.
+Chapter~\ref{ch:verification} details the verification
+of the proposed solution.
+Section~\ref{sec:test-configuration} sets the
+testing framework used for validation.
+%Section~\ref{sec:results-comparisons} presents the results
+%of the validations.
+Finally chapter~\ref{ch:conclusions} shows the conclusions
+and final remarks of this undergraduate thesis.
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../thesis"
+%%% End:

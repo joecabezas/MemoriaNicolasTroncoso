@@ -1,0 +1,278 @@
+\chapter[Technology Overview]{Technology Overview}
+\label{ch:technology-overview}
+This chapter glides over the current
+code generator technologies
+that are relevant in the ACS framework context.
+The main scope of this thesis
+is the generation of backend code,
+for that reason only tools suited for this purpose
+are discussed.
+
+Program transformation has applications and uses
+in many areas of software engineering,
+including compilation,
+optimization~\cite{grune02:_compiler_design},
+refactoring,
+program synthesis,
+software renovation,
+and reverse engineering~\cite{muller00:_rever_engin, RE-WEB}.
+The aim of program transformation is to increase programmer productivity
+by automating programing tasks,
+thus enabling programing at a higher-level of abstraction,
+and increasing maintainability and re-usability~\cite{visser01:_asurvey}.
+
+Program transformation may be divided roughly into the areas of
+translation and rephrasing.
+A \emph{translation} involves transforming a program from a source language
+into a ``different'' target language.
+Examples of such transformations are compilers such as
+GCC~\cite{GCC-WEB},
+TAO IDL~\cite{TAO-WEB},
+\mbox{OmniOrb} IDL~\cite{OMNIORB-WEB},
+jacOrb IDL~\cite{JACORB-WEB}.
+Others are model to code transformations,
+like the
+ACS Error definition system~\cite{jeram02:_ACS_error_system}.
+
+\emph{Rephrasings} are transformations that take an input program
+and produce an output in the same language.
+Rephrasing tries to say the same thing using different words.
+The main scenarios where this is used are optimization,
+refactoring,
+and renovation.
+
+\section{Generic Program Transformation (Code Generation)}
+\label{sec:translation}
+
+The main focus of the survey in this section
+is the assessment of translation technologies
+for use in the ALMA project.
+This case study is aimed at finding proper tools and methods
+to transform high level program definitions
+into a high level language implementation
+as is done by TAO, OmniOrb and JacOrb when transforming IDL representations.
+This survey covers generic tools and special purpose tools.
+The objective is to review
+different technologies.
+
+\subsection{IDL Transformations}
+\label{sec:IDL-transformations}
+Interface definition language,
+or IDL for short,
+is a specification language used to describe a software component's interface.
+This language is part of the CORBA specification~\cite{CORBA-WEB, OMG-IDL, CORBA-OMG02},
+which makes it a commonly used standard,
+in particular it is widely used in ACS since ACS is CORBA-based.
+IDL is the language used to describe the
+interfaces that client objects call and object implementations provide. An interface
+definition written in IDL completely defines the interface and fully specifies
+each operation’s parameters. An IDL interface provides the information needed
+to develop clients that use the interface’s operations.
+This description may then be used
+to generate language specific implementations of such interfaces,
+making it possible to call objects written in one language
+from clients written in another in a transparent manner.
+The following are implementation examples of IDL transformations,
+in particular the ones in common use in ACS.
+\begin{description}
+\item[The ACE ORB (TAO)~\cite{TAO-WEB}:]
+  A CORBA C++ Object Request Broker (ORB).
+  This tool offers an IDL compiler that creates a C++ representation
+  of the interface.
+\item[omniORB~\cite{OMNIORB-WEB}:]
+  A robust high performance CORBA ORB that
+  offers an IDL compiler for C++ and Python.
+\item[jacOrb~\cite{JACORB-WEB}:]
+  A CORBA Java ORB that
+  provides an IDL compiler for the Java language.
+\end{description}
+These are perfect examples of a program translator (code generator).
+
+\subsection{Code Generation in VLT Software}
+\label{sec:code-generation:VLT}
+Very Large Telescope (VLT) Software~\cite{filipi99:_vlt_software}
+is a common proprietary middleware platform
+which provides common services such as messaging, persistence, error handling and logging.
+It also provides several utility programs, some with graphical user interface, to make development and debugging
+of VLT applications easier.
+To ease the development of VLT applications a dedicated framework is used.
+The Workstation Software Framework (WSF)~\cite{andolfato09:_wsf}
+is a state machine model driven development
+designed to generate applications based on ESO VLT software.
+Where state machine models are used to generate executables.
+The framework provides code generation and supports hierarchical state machines, generating readily usable code.
+
+\subsection{ALMA Control Software: Hardware Device Code Generator}
+\label{sec:control-generator}
+ALMA Control software uses a model driven approach
+to generate code that controls the underlying hardware~%
+  \cite{farris06:_generating_software_modules}.
+Information from the hardware ICD (Interface Control Document)
+is captured in the form of spreadsheets (using Microsoft Excel 2003)
+that contains detailed information about the device,
+its monitor and control points,
+and its data monitor points that are to be permanently archived.
+The spreadsheets are saved as XML documents~%
+  \cite{farris07:_device_driver_code_gener_framew}.
+Such a XML document is later fed to a template based code generator
+that produces code that runs seamlessly in the ACS framework.
+The generator used is OAW (Open Architecture Ware)~%
+  \cite{OAW-WEB}, a modular generator framework implemented in Java.
+It supports parsing of arbitrary models,
+and a language family to check and transform models
+as well as to generate code based on them.
+
+An important factor to consider in this code generator framework
+is the automatic generation of a simulation environment~%
+  \cite{mora08:_towar_gener_hardw_devic_simul}.
+This enables developers to test their code as soon as possible
+getting a minimum assurance that the new code works.
+
+The shortcoming of this code generator
+is that it is specific for ALMA Control Software,
+and it is detached from the ACS software release cycle.
+This means that extra modifications are required by the CONTROL
+software team when a new ACS delivery includes changes in the framework.
+Notwithstanding, the Control Software generator is in production
+(it is considered to be delivered and complete)
+and no new design enhancements are foreseen in the near future.
+An enhancement beyond the scope of this undergraduate thesis
+would be to integrate the control generator with the new
+generator proposed by the author.
+
+\section{Code Generation in ACS}
+\label{sec:code-generation:ACS}
+ALMA Common Software as a framework supports code generation to some extent.
+CORBA stubs (see~\ref{sec:IDL-transformations})
+and error definitions (see~\ref{sec:ACS-error-system})
+for all languages supported by ACS are automatically generated.
+Also,
+ACS provides a state machine code generator
+which to some extent makes ACS a generated code framework.
+Having all the previous generation facilities,
+the core programing is done in the software components.
+Nevertheless,
+writing software components is still a repetitive task,
+the overhead is the same for all components~%
+  \cite{grega05:_acs_comp_cont_fram_tut}.
+To circumvent the overhead of repetitive tasks some
+ACS code generators have been proposed, like
+the ACSgenerator described in~\ref{sec:acs-generator}.
+
+\subsection{ACS Error System Code Generator}
+\label{sec:ACS-error-system}
+The ACS Error System~\cite{jeram02:_ACS_error_system}
+is based on XML (Extensible Markup Language)
+and XSLT (Extensible Stylesheet Language Transformations)~%
+ \cite{XSLT-WEB} code generation.
+Types and their corresponding codes are defined in XML files
+in an ACS language independent way.
+Which will in turn be converted to the specific
+Java,
+C++ and
+Python implementation.
+For each error definition type,
+a unique XML file must be written by the developer.
+This file is used by the XSLT transformation to produce the code.
+The generated code contains a set of completion and exception helper classes,
+one for each error code.
+There is a separate XSLT for each programming language
+and one specifically for IDL.
+Currently all code generation is done automatically
+during system build
+by using a target in the ACS \lstinline[language=sh]!Makefile!.
+This code generator is considered to be complete,
+at this time it is being used in production
+in ALMA software.
+
+\subsection{ACSGenerator}
+\label{sec:acs-generator}
+ACSgenerator is a community code contribution to the ACS project.
+It is based on bdsGenerator~\cite{ACS-CONT}
+which was created to use ACS sofwate
+with the Hexapod Telescope~\cite{HPT-WEB}.
+The bdsGenerator system is a C++ hardcoded template based code generator
+that parses IDL files and creates
+a C++ ACS component module.
+ACSgenerator further extends the bdsGenerator work
+providing very advanced code generation.
+At this time ACSgenerator
+only creates C++
+component modules making it
+complementary to the work in this thesis.
+The work proposed in this thesis aims
+at solving some limitations of ACSgenerator,
+such as
+one interface per module,
+and simple template extension.
+The expirience of this generator should be used
+when extending the ACS generator to the C++ implementation
+in an effort to merge the functionality of both.
+
+\section{Impact of Code Generation}
+\label{sec:code-generation:impact}
+During the past decade
+there has been an
+upsurge in the use of code generators
+in an attempt to deliver enterprise
+software to the market as
+quickly as possible~\cite{ACG}.
+Even though
+automated code generation is not a new concept,
+it had received
+relatively little recognition.
+
+Expertise is an intangible but unquestionably valuable commodity.
+People acquire it slowly,
+it takes a long time for a novice to become an expert.
+Design patterns~\cite{gamma94:_design_patterns}
+are a way to capture expert knowledge
+and convey it to novice developers.
+The drawback with this approach is that a design pattern
+is only know-how and not an implementation per se.
+Budinsky et al. describe an automatic code generator~%
+   \cite{budinsky96:_automatic_code_generation}
+which addresses this issue by generating code
+using a specified design pattern.
+This approach ensures consistency throughout the development.
+
+Support of software evolution and maintenance is at hand
+when generating code from a formal definition language.
+Such a definition may be appropriately translated
+to cope with underlying platform changes
+without major developer interaction~\cite{floch95:_automatic_code_generator}.
+A framework change is possible without cumbersome refactoring
+of all the software built on top of the framework,
+since the change can be made in the generator.
+
+Some of the mayor concerns at hand
+when working with code generation
+is
+keeping the generated code
+clean and humanly readable.
+This is important for this project since
+the way defined by ALMA software development
+to handle problems in generated code
+is to debug
+the generated code,
+manually
+tweaking it until the problem is found and fixed,
+and the fix is then introduced into the generation process.
+This debug process can be extremely complex if the
+generated code is not well structured.
+Another important pitfall of the code generation
+is that if a bug is introduced in the generated code
+this bug will be present all over the generated software.
+At the same time, since the generation process is common,
+fixing a bug
+fixes it in all the generated software.
+On the other hand,
+if the generator itself is opaque,
+there will be a tendency to fix the generated code instead of the generator.
+These issues should be kept in mind when
+working with code generation.
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../thesis"
+%%% End:

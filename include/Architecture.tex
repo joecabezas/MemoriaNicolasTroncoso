@@ -1,0 +1,452 @@
+\chapter{Architecture of the Solution}
+\label{ch:architecture}
+Following the industry standard and a requirement from
+the ACS software group,
+UML (Unified Modelling Language)~\cite{UML-WEB} was chosen as the model definition language.
+As ACS ships with Open Architecture Ware (OAW)~\cite{OAW-WEB}, it was natural to use
+this tool to build the ACS code generator
+since it avoids introducing new external
+software into the ACS framework.
+
+The greatest challenge to achieve a proper code generation for the ACS framework
+was to properly translate an UML model into generated code.
+The overall architecture proposes to start from
+an UML model in XMI 2.0 UML~\cite{OMG-WEB} format,
+and use Open Architecture Ware to transform this model into an actual implementation.
+The generated implementation consists in
+the Java component code,
+the corresponding IDL interface,
+an XSD Schema file
+and
+an example configuration database usable for immediate testing.
+The generated Java component is a ready component
+in the sense that it may be instantiated
+by the ACS component without need of extension by the developer.
+This provides and easy and first verification that the generated code is working properly.
+
+The general architecture of this code generator
+allows the developer to generate ACS
+components and
+characteristic components.
+The former are the simplest case and the later add
+additional complexity when generating code
+since they require access to the BACI interface.
+BACI, the Basic Control Interface
+is a general purpose control framework.
+It does not specify any specific control system,
+but it restrict the space of definable objects
+within a specific design and guidelines defined
+in the BACI interface~\cite{plesko05:_baci}.
+It is not required to have components and characteristic components
+in different models.
+The ACS framework is container/component based.
+Hence ACS components are the basic
+functional software element that can be created.
+In case the control interface is needed
+it is possible to define characteristic components
+instead of simple components,
+this will give the software implementation
+access to BACI.
+The ACS code generator
+expects that classes identify their
+behavior, either as components or as characteristic components,
+using stereotypes and thus instructing the
+code generation on how to proceed.
+
+The generation flow will take the UML model as input and generate
+the IDL interface, Java base code,
+and a test CDB (ACS Configuration DataBase).
+In the case of a class that is a
+characteristic component,
+a XSD (Extensible Markup Language Schema Document)
+schema is generated as well.
+
+\section{UML Model Specification}
+\label{sec:uml-model-specification}
+The UML model must comply with some specific stereotypes not specified in the UML standard
+but relevant in the ACS framework. These stereotypes are enumerated in table~\ref{tb:stereotypes}.
+\begin{table}
+\centering
+\begin{tabular}{|l|l|}
+\hline \textbf{Stereotype} & \textbf{Description} \\
+\hline \multicolumn{2}{|l|}{\textbf{Class Stereotype}} \\
+\hline \texttt{<<CharacteristicComponent>>} & Indicates if the component is characteristic.\\
+\hline \texttt{<<NOGenerated>>} & Indicates that this class must not be generated.\\
+\hline \texttt{<<IDLStruct>>} & Indicates that this class must be treated as an IDL struct.\\
+\hline \multicolumn{2}{|l|}{\textbf{Type Member Stereotype}} \\
+\hline \texttt{<<ReadOnlyProperty>>} & The type uses the read-only BACI interface for properties.\\
+\texttt{<<ReadWriteProperty>>} & The type uses the read/write BACI interface for properties.\\
+\hline \multicolumn{2}{|l|}{\textbf{Function Member Stereotype}} \\
+\hline \texttt{<<Asynchronous>>} & The method is implemented as an asynchronous method.\\
+\hline
+\end{tabular}
+\caption{Stereotypes}
+\label{tb:stereotypes}
+\end{table}
+Additionally,
+it should be possible to specify data types which are not defined by the UML specification,
+for example the \lstinline[language=IDL]!Sequence! data type. This type is declared and used extensively in the ACS framework.
+If this non-standard data type is used in the model it should be used automatically in the generated code without
+any special intervention.
+Additionally the UML package name will be used by the code generator to name the \lstinline[language=sh]!jar! file, and the directory structure.
+An important feature in the generation process is to define some class as
+\texttt{<<NOGenerated>>}, this instructs the code generator
+not to generate any implementation for it.
+This is significant when doing complex extensions,
+were it is possible that the developer does not want to generate code for a particular class,
+but wants to keep the model complete so the generator may define extending classes
+appropriately.
+
+\section{Infrastructure}
+\label{sec:infrastructure}
+Along with the generated code,
+the ACS module infrastructure is created as well.
+This infrastructure is needed to properly compile and install and
+ACS component,
+independent of its implementation language.
+This infrastructure is divided in various sub-directories
+which contain essential information divided in different categories.
+\begin{quote}
+  \begin{description}
+  \item[idl:] This directory contains the IDL interfaces and the XML
+    definitions of the errors.
+  \item[include:] This directory contains files with definitions,
+    normally C++ header files.
+  \item[src:] This directory contains the actual code and the ACS
+    \lstinline[language=sh]!Makefile!.
+  \item[config:] This directory contains the ACS schema specification
+    if one is required.
+  \item[doc:] This directory contains any additional documentation.
+  \end{description}
+\end{quote}
+The directory structure is created automatically during the generation process.
+
+\section{Non Generated Code}
+\label{sec:non-generated-code}
+It is not possible to fully generate the logic within the software component.
+To achieve the full functionality of the component the developer must extend the generated code.
+This scheme has been shown to work in the ALMA CONTROL software code generation~%
+\cite{farris07:_device_driver_code_gener_framew,%
+      farris06:_generating_software_modules}
+where the generated code is extended by class inheritance.
+The same approach is used in the ACS Code Generator,
+a minimal working component is automatically generated,
+but the internal logic must be added by the developer by means of class extension.
+
+\begin{figure}[htp]
+  \begin{center}
+  \includegraphics[width=\textwidth]{images/generation}
+  \end{center}
+  \caption{Code Separation}
+  \label{fg:generation}
+\end{figure}
+
+The main benefit of this approach is that it isolates
+the generated code from the user written code.
+The side effect of this is that code may be regenerated
+multiple times without affecting user implemented code.
+This is known as a code separation pattern as
+seen in figure~\ref{fg:generation}.
+
+During the development cycle
+the base (generated) classes are created,
+then the developer extends these classes
+and implements complex functionality within the extensions.
+This approach is used with the generated IDL
+and generated Java files.
+It is also possible to use the same
+approach with the generated XSD files.
+
+OAW provides a way to tell the generator which
+parts it must generate,
+by allowing the developer to delimit certain
+regions of code as protected.
+The code separation scheme described above was preferred over
+region delimitation since the later
+adds complexity to the generator
+and
+to the generated files themselves.
+
+\section{Deployment Configuration}
+\label{sec:deployment-generation}
+The CDB is the database that holds the deployment configuration for ACS components.
+It is not possible to deploy an ACS software module without it.
+The code generator presented in this document generates a basic test CDB.
+This CDB contains the Manager and components definition.
+Every component (characteristic and non-characteristic) defined in the UML model is
+inserted into the generated CDB. Thus, once code generation is done, the developer has
+a ready to go test CDB with which he may readily instantiate the ACS components.
+
+An additional feature which was specified as a requirement for this code generator
+is the creation of a schema file when dealing with characteristic components. So, in addition
+of creating the proper CDB files, the generator creates the schema file that validates the
+CDB.
+
+
+\section{Generation Workflow}
+\label{sec:generation-workflow}
+This section describes the steps taken
+in order to convert an UML model into an
+ACS system,
+see figure~\ref{fg:generalWorkflow} for a general layout
+of the steps to accomplish
+the end to end generation task.
+\begin{figure}[htp]
+  \begin{center}
+  \includegraphics[width=5cm]{images/general-workflow}
+  \end{center}
+  \caption{General Generation Workflow}
+  \label{fg:generalWorkflow}
+% Fixme: Place "IDL tasks", etc in an external column?
+\end{figure}
+
+Figure~\ref{fg:processWorkflow} shows the internal steps taken by the code generation.
+The targets described in table~\ref{tb:oawtasks} are
+tasks taken by the ACS code generator in order to generate
+the ACS software module.
+\begin{table}[htp]
+\centering
+\begin{tabular}{|l|l|}
+\hline \textbf{Task Name} & \textbf{Description} \\
+\hline \multicolumn{2}{|l|}{\textbf{IDL tasks}} \\
+\hline \texttt{genidlCommon} & Generate common IDL files. Contains structs and enumerated types.\\
+\hline \texttt{genidl} & Generate IDL files for every ACS component.\\
+\hline \multicolumn{2}{|l|}{\textbf{Java Tasks}} \\
+\hline \texttt{genjava} & Generate Java Helper and Java Base classes.\\
+\hline \multicolumn{2}{|l|}{\textbf{ACS module tasks}} \\
+\hline \texttt{genschema} & Generate Schemas in case of ACS characteristic component.\\
+\hline \texttt{gencdb} & Generate test CDB.\\
+\hline \texttt{genmake} & Generate Makefile.\\
+\hline
+\end{tabular}
+\caption{OAW Tasks}
+\label{tb:oawtasks}
+% Fixme: Place "IDL tasks", etc in an external column?
+\end{table}
+
+The tasks described in table~\ref{tb:oawtasks}
+show the different OAW targets
+which are processed
+in order to
+generate an ACS software module.
+Every task in independent of the
+others, so
+they may be interchanged, eliminated or
+new steps could be added.
+\begin{figure}[htp]
+  \begin{center}
+  \includegraphics[width=10cm]{images/oaw-workflow}
+  \end{center}
+  \caption{Generation Process Workflow}
+  \label{fg:processWorkflow}
+\end{figure}
+
+
+\section{Extension and Modification of the Code Generator}
+\label{sec:extension-modification}
+As described before it is possible to
+extend or modify the templates.
+This can be done without big
+invasions of the existing templates,
+since custom templates may be defined
+and their location
+configured
+in the \lstinline[language=sh]!workflow.oaw! file
+under the targets described in table~\ref{tb:oawtasks}.
+The same way alternate templates
+are configured,
+additional targets can
+be added
+to \lstinline[language=sh]!workflow.oaw!,
+since as described before the
+code generation targets are independent of each other.
+This modularized approach was taken to enable extension and
+to keep generation modules small and maintainable.
+
+Extending or designing new templates
+requires some expertise and knowledge of
+the Xpand2 and Xtend languages,
+yet the implemented templates
+may be used as a staring point or tutorial
+on how Xpand2 works.
+OAW documentation clear, good, abundant and freely available,
+and OAW has recently been merged with the
+Eclipse Modeling Project~\cite{EMF-WEB},
+widening its community support.
+
+\section{Final Proposal}
+\label{sec:final-proposal}
+This section describes the final proposal for the ACS code generator.
+This proposal takes into account
+all the previous discussion,
+further validation may be seen in chapter~\ref{ch:verification}.
+
+\subsection{OAW Generation Process Specifics}
+\label{sec:oaw-specifics}
+OAW (Open Architecture Ware)~%
+\cite{OAW-WEB} is a modular generator framework implemented in Java.
+It supports parsing of arbitrary models,
+and a language family to check and transform models
+as well as generate code based on them.
+It provides the following facilities:
+Xtext, Check, Xpand2 and Xtend.
+The architecture of the ACS code generator
+is based on the later two.
+Xpand2 provides a template base generation,
+and Xtend provided a set of helper functions
+to keep the templates clean.
+
+The tasks that OAW executes are defined in the
+workflow configuration (\lstinline[language=sh]!workflow.oaw! file).
+This is an XML file which configures how
+the model is parsed and which templates
+should be applied to the model.
+
+\begin{itemize}
+  \item{\textbf{Parsing and navigating the model.}}
+  OAW provides the flexibility to define
+  in house model representations,
+  as seen in the case of ALMA CONTROL Software~\cite{farris06:_generating_software_modules},
+  or use factory shipped model parsers.
+  In the specific case of the ACS code generator,
+  since UML models are used,
+  it is possible to use the UML model parser provided
+  by OAW.
+  The model representation is easily navigated
+  since it is presented as an hierarchical structure,
+  in the form of a series of containers related to other,
+  where it is possible to ask for
+  attributes, contained elements, or parent elements.
+  The ACS code generator is designed to
+  understand class diagrams.
+  Having this in mind its possible to retrieve all
+  the classes in the model as a list.
+  Then it is possible to go in depth in each one of this
+  class elements retrieving attributes, stereotypes, operations
+  and relations to other classes.
+  Then again for each class sub-element it is possible
+  to retrieve their sub-elements, so on and so forth
+  until leaf elements are reached.
+
+  \item{\textbf{Applying the templates.}}
+  The OAW Xpand2 templates are defined as
+  dynamically replacing text.
+  This is done by defining routines that
+  fetch the required attributes from the parsed
+  model and
+  replace it in a text template.
+  It is possible to define multiple output text files
+  as well as a single output file
+  in a single template file.
+  This allows the generator to generate one file
+  per class, and
+  a single file for common class interfaces (IDLs).
+  The text which is replaced in the template
+  is embraced within the special characters
+  \textbf{\flqq~~\frqq} (called guillemets).
+  The replacement text may be a call
+  to a function in Xtend or even an external Java
+  call in case very complex substitutions are needed.
+  This flexibility allows the template to be very small,
+  but generate substantial files, or even multiple files,
+  keeping the complexity of the template as low as possible.
+\end{itemize}
+
+\subsection{Design}
+\label{sec:design}
+The integrated design of the generator may be seen in figure~\ref{fg:design}.
+The overall design is based on translating an UML model in XMI format
+into an ACS Component.
+This is done using:
+\begin{enumerate}
+    \item\textbf{OAW Workflow definition:}
+    This defines the steps to be taken to generate the ACS component.
+    In the case of this specific generator
+    the steps defined in the workflow are the ones
+    described previously in table~\ref{tb:oawtasks}
+    \item\textbf{Template definition:}
+    Each one of the defined tasks requires a separate template that will
+    translate into a file. Each template is domain specific, so there must be one for each transformation
+    that must be done (i.e., Java files, CDB files, etc).
+    The input information for these transformations
+    is the UML model that has been previously parsed by OAW.
+    \item\textbf{Extension definition:} These are meant to be helpers to the \textbf{Template definitions}.
+    They gather common transformation that are shared by all the domains. In the specific case
+    of this generator they gather functions to detect if a class should be generated or not,
+    and in what way it should, if it is an IDL
+    \lstinline[language=IDL]!Struct!,
+    \lstinline[language=IDL]!Component!,
+    or \lstinline[language=IDL]!CharacteristicComponent!.
+\end{enumerate}
+
+\begin{figure}
+  \begin{center}
+  \includegraphics[width=\textwidth]{images/design}
+  \end{center}
+  \caption{Generator Design}
+  \label{fg:design}
+\end{figure}
+
+All generated files are output to a directory defined in the OAW workflow file.
+This directory is created so as to mimic an ACS template.
+For this reason,
+once the files are generated its possible to compile and install right away.
+
+\subsubsection{Challenges Encountered}
+This section describes the specific problem and challenges that were encountered
+when developing the ACS code generator.
+\begin{itemize}
+  \item{\textbf{The templates get cluttered.}}
+  The templates get cluttered very fast with tasks
+  and
+  statements that must be repeated.
+  To solve this, the repetitive task or
+  similar tasks were transferred to an
+  extension file.
+  This extension file is written in a
+  functional language that OAW provides.
+  Extension may be included in any template
+  and help to keep the template simple.
+  \item{\textbf{Mapping of types from UML to code is not direct.}}
+  UML defines native type with caps for the first letter.
+  For example,
+  IDL does not support the type \lstinline[language=Java]!int!,
+  and JacOrb translates a
+  \lstinline[language=IDL]!long! into an \lstinline[language=Java]!int!,
+  this created many type
+  mismatches. To solve this problem
+  special methods where implemented in the extension file.
+  The methods translate an UML type into an IDL or Java type
+  as required.
+  \item{\textbf{Return types and return values for the Java code are not correct.}}
+  This problem is similar to the one described in the previous item.
+  The issue is that the Java code must return the type and value defined in IDL,
+  which led to mismatches. The solution was to implement a method that gets the proper
+  return type and value for the Java code. This method is also part of the
+  extensions file.
+  \item{\textbf{Definition of IDL structs and enumerated types lead to type redefinitions.}}
+  To address this issue, OAW tasks \lstinline[language=sh]!genidl! (described in table~\ref{tb:oawtasks})
+  was internally split into two steps.
+  \begin{enumerate}
+    \item Generate IDL structs and enumerated types into a common file.
+    \item Generate other IDL files and include the common file.
+  \end{enumerate}
+  This also provides a more granular control
+  when importing this IDL files from client code
+  or external software module.
+  \item{\textbf{Generation does not guarantee the order of IDL entities}}.
+  This problem appears when using more complex models. If the XMI description
+  is not ordered in a dependency sense, then the generated IDL code
+  does not build since it uses structures that have not been defined yet.
+  Dependencies within classes may be solved by forward declaration, but
+  dependencies within IDL structs may not.
+  Therefore the XMI file must be dependency ordered\footnote{%
+  An experimental ordering function is being tested to circumvent this issue.
+  This function should be ready for the release of the second prototype.}.
+\end{itemize}
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../thesis"
+%%% End:

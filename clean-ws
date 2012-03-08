@@ -1,0 +1,5 @@
+#!/bin/bash
+/usr/bin/perl -pi -e 's;[ 	]+$;;' \
+    $(/usr/bin/git ls-tree HEAD -- * images/* include/* |
+          /usr/bin/cut -f2,2 |
+          /bin/grep -v '\.\(jpeg\|png\)\|sty$')
